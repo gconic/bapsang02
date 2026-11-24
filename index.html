@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘의 밥상</title>
+  <style>
+    :root {
+      --bg: #f6ecd9;          /* 한지 느낌 바탕 */
+      --bg-dot: #efe0c4;
+      --ink: #4a2f1d;         /* 먹색에 가까운 갈색 */
+      --accent: #b5452f;      /* 단청 붉은색 */
+      --table: #8a5530;       /* 상 나무색 */
+      --table-dark: #5e3519;
+      --table-light: #a8693c;
+      --card: #fffaf0;
+      --card-edge: #e3cfa8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      padding: 32px 16px;
+      background-color: var(--bg);
+      background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
+      background-size: 18px 18px;
+      color: var(--ink);
+      font-family: "Nanum Myeongjo", "Batang", "AppleMyungjo", serif;
+    }
+
+    header { text-align: center; }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3rem);
+      letter-spacing: 0.15em;
+    }
+
+    h1::after {
+      content: "";
+      display: block;
+      width: 48px;
+      height: 3px;
+      margin: 12px auto 0;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .date {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    /* 둥근 상 */
+    .table {
+      --size: min(88vw, 540px);
+      position: relative;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 50%;
+      background:
+        repeating-radial-gradient(circle at 50% 50%,
+          transparent 0 14px, rgba(0,0,0,0.05) 15px 16px),
+        radial-gradient(circle at 35% 30%, var(--table-light), var(--table) 60%, var(--table-dark));
+      border: 10px solid var(--table-dark);
+      box-shadow:
+        0 18px 0 -4px #4a2812,          /* 상 다리 쪽 두께감 */
+        0 30px 40px rgba(74, 40, 18, 0.35),
+        inset 0 0 30px rgba(0,0,0,0.25);
+    }
+
+    /* 반찬 목록 = 카드들 */
+    .dishes {
+      list-style: none;
+      position: absolute;
+      inset: 0;
+    }
+
+    .dishes li {
+      --card-w: calc(var(--size) * 0.24);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--card-w);
+      aspect-ratio: 3 / 4;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6%;
+      background: var(--card);
+      border: 2px solid var(--card-edge);
+      border-radius: 14px;
+      box-shadow: 0 6px 12px rgba(40, 20, 5, 0.3);
+      font-size: calc(var(--card-w) * 0.15);
+      font-weight: 700;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: default;
+    }
+
+    .dishes li::before {
+      content: attr(data-emoji);
+      font-size: calc(var(--card-w) * 0.38);
+      line-height: 1;
+    }
+
+    .dishes li:hover {
+      transform: translate(-50%, -50%) translateY(-6px);
+      box-shadow: 0 12px 18px rgba(40, 20, 5, 0.35);
+    }
+
+    footer {
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>오늘의 밥상</h1>
+    <p class="date" id="date"></p>
+  </header>
+
+  <div class="table">
+    <!--
+      ▼ 반찬 목록 ▼
+      한 줄씩 추가하면 상 위에 카드가 늘어나요.
+      형식: <li data-emoji="이모지">이름</li>
+      예)   <li data-emoji="🥚">계란말이</li>
+    -->
+    <ul class="dishes">
+      <li data-emoji="🍚">밥</li>
+      <li data-emoji="🍲">국</li>
+      <li data-emoji="🥬">김치</li>
+    </ul>
+  </div>
+
+  <footer>잘 먹겠습니다</footer>
+
+  <script>
+    // 오늘 날짜
+    document.getElementById("date").textContent =
+      new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+
+    // 카드를 둥근 상 위에 원형으로 배치
+    const cards = document.querySelectorAll(".dishes li");
+    const n = cards.length;
+    // 반찬이 많아지면 카드를 조금씩 작게
+    const scale = n <= 4 ? 1 : Math.max(0.55, 4 / n * 1.1);
+    const radius = n === 1 ? 0 : 30; // 상 지름 대비 %
+
+    cards.forEach((card, i) => {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2; // 12시 방향부터
+      card.style.left = 50 + Math.cos(angle) * radius + "%";
+      card.style.top = 50 + Math.sin(angle) * radius + "%";
+      card.style.setProperty("--card-w", `calc(var(--size) * ${0.24 * scale})`);
+    });
+  </script>
+</body>
+</html>
